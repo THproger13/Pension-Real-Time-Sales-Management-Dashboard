@@ -16,6 +16,37 @@ room_types = {
 # 숙박 인원수 옵션을 정의합니다.
 guest_numbers = [2, 3, 4, 5]
 
+
+# 요일과 시간에 따라 num_transactions 수를 조절한다.
+def modify_num_transactions_as_time():
+    current_hour = datetime.now().hour
+    current_day = datetime.now().day
+
+    # 평일과 주말에 num_transactions 수를 조절한다.
+    if 0 <= current_day <= 4:
+        if 9 <= current_hour <= 18:
+            random_num_transactions = random.randrange(100, 300)
+            num_transactions = random_num_transactions
+            return num_transactions
+        else:
+            random_num_transactions = random.randrange(300, 800)
+            num_transactions = random_num_transactions
+            return num_transactions
+    else:
+        if 9 <= current_hour <= 12:
+            random_num_transactions = random.randrange(10, 200)
+            num_transactions = random_num_transactions
+            return num_transactions
+        elif 12 <= current_hour <= 20 :
+            random_num_transactions = random.randrange(150, 700)
+            num_transactions = random_num_transactions
+            return num_transactions
+        else :
+            random_num_transactions = random.randrange(0, 100)
+            num_transactions = random_num_transactions
+            return num_transactions
+
+
 def generate_transactions(num_transactions, member_emails, room_types, guest_numbers):
     transactions = []
     for _ in range(num_transactions):
@@ -38,8 +69,9 @@ def generate_transactions(num_transactions, member_emails, room_types, guest_num
 
     return transactions
 
+
 # 예시로 10개의 결제 데이터를 생성합니다.
 # 실제로는 각 고객이 3~4번 결제한다고 하니, 이를 반영하여 적당한 수를 곱해줍니다.
-example_transactions = generate_transactions(10 * 3, member_emails, room_types, guest_numbers)
+example_transactions = generate_transactions(num_transactions, member_emails, room_types, guest_numbers)
 for transaction in example_transactions:
     print(transaction)
