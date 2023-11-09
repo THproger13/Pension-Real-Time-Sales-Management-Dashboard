@@ -14,10 +14,18 @@ sales = df.selectExpr("CAST(value AS STRING)") \
     .groupBy(window(col("timestamp"), "1 day"), col("roomType")) \
     .sum("roomPrice")
 
+sales = df.selectExpr("CAST(value AS STRING)") \
+    .groupBy(window(col("timestamp"), "1 week"), col("roomType")) \
+    .sum("roomPrice")
+
+sales = df.selectExpr("CAST(value AS STRING)") \
+    .groupBy(window(col("timestamp"), "1 month"), col("roomType")) \
+    .sum("roomPrice")
+
 # MySQL 데이터베이스에 저장하는 쿼리를 정의합니다.
 def write_to_mysql(df, epoch_id):
     df.write.format("jdbc") \
-        .option("url", "jdbc:mysql://mysql-server/db_name") \
+        .option("url", "jdbc:mysql://mysql-server/db_reservation") \
         .option("dbtable", "sales_summary") \
         .option("user", "root") \
         .option("password", "password") \
