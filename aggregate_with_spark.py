@@ -1,36 +1,55 @@
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, window
+def aggregate_with_spark(ds, **kwargs):
 
-spark = SparkSession.builder.appName("sales-analytics").getOrCreate()
+    from pyspark.sql import SparkSession
+    from pyspark.sql.functions import col, from_json, window
+    from pyspark.sql.types import StringType, StructType, StructField, IntegerType, TimestampType
 
-# Kafka 소스에서 스트리밍 데이터프레임을 생성합니다.
-df = spark.readStream.format("kafka") \
-    .option("kafka.bootstrap.servers", "kafka-server:9092") \
-    .option("subscribe", "pension-sales") \
-    .load()
+    spark = SparkSession.builder \
+        .appName("sales-analytics") \
+        .config("spark.jars", "/path/to/mysql-connector-java.jar") \
+        .getOrCreate()
 
-# 데이터를 처리합니다. 여기서는 간단한 창(window) 기반 집계를 예로 듭니다.
-sales = df.selectExpr("CAST(value AS STRING)") \
-    .groupBy(window(col("timestamp"), "1 day"), col("roomType")) \
-    .sum("roomPrice")
+    # Kafka 소스에서 스트리밍 데이터프레임을 생성합니다.
+    df = spark.readStream \
+        .format("kafka") \
+        .option("kafka.bootstrap.servers", "kafka-server:9092") \
+        .option("subscribe", "pension-sales") \
+        .option("startingOffsets", "earliest") \
+        .load()
 
-sales = df.selectExpr("CAST(value AS STRING)") \
-    .groupBy(window(col("timestamp"), "1 week"), col("roomType")) \
-    .sum("roomPrice")
+    # 정의된 스키마에 따라 JSON 문자열을 파싱합니다.
+    schema = StructType([
+        StructField("memberEmail", StringType()),
+        StructField("roomType", StringType()),
+        StructField("roomPrice", IntegerType()),
+        StructField("guestNumber", IntegerType()),
+        StructField("timestamp", TimestampType())
+    ])
 
-sales = df.selectExpr("CAST(value AS STRING)") \
-    .groupBy(window(col("timestamp"), "1 month"), col("roomType")) \
-    .sum("roomPrice")
+    sales_df = df.select(from_json(col("value").cast("string"), schema).alias("data")).select("data.*")
 
-# MySQL 데이터베이스에 저장하는 쿼리를 정의합니다.
-def write_to_mysql(df, epoch_id):
-    df.write.format("jdbc") \
-        .option("url", "jdbc:mysql://mysql-server/db_reservation") \
-        .option("dbtable", "sales_summary") \
-        .option("user", "root") \
-        .option("password", "password") \
-        .mode("append") \
-        .save()
+    # 다양한 시간대 기반 윈도우를 사용하여 데이터 집계
+    sales_daily = sales_df.groupBy(window(col("timestamp"), "1 day"), col("roomType")).sum("roomPrice")
+    sales_weekly = sales_df.groupBy(window(col("timestamp"), "1 week"), col("roomType")).sum("roomPrice")
+    sales_monthly = sales_df.groupBy(window(col("timestamp"), "1 month"), col("roomType")).sum("roomPrice")
 
-query = sales.writeStream.foreachBatch(write_to_mysql).start()
-query.awaitTermination()
+    # MySQL 데이터베이스에 저장하는 쿼리를 정의합니다.
+    def write_to_mysql(df, epoch_id):
+        df.write \
+            .format("jdbc") \
+            .option("url", "jdbc:mysql://mysql-server/db_reservation") \
+            .option("dbtable", "sales_summary") \
+            .option("user", "root") \
+            .option("password", "password") \
+            .option("driver", "com.mysql.jdbc.Driver") \
+            .mode("append") \
+            .save()
+
+    # 각 윈도우 기반 집계에 대해 쓰기 작업을 설정합니다.
+    # 쿼리는 비동기적으로 실행됩니다.
+    query_daily = sales_daily.writeStream.foreachBatch(write_to_mysql).outputMode("update").start()
+    query_weekly = sales_weekly.writeStream.foreachBatch(write_to_mysql).outputMode("update").start()
+    query_monthly = sales_monthly.writeStream.foreachBatch(write_to_mysql).outputMode("update").start()
+
+    # 작업이 바로 반환되어 Airflow로 제어가 돌아오도록 합니다.
+    return {"query_daily_id": query_daily.id, "query_weekly_id": query_weekly.id, "query_monthly_id": query_monthly.id}

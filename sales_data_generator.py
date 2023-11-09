@@ -1,11 +1,8 @@
 from datetime import datetime, timedelta
 import random
 import json
-from kafka import KafkaProducer
 
-producer = KafkaProducer(bootstrap_servers='kafka-server:9092')
-
-
+# producer = KafkaProducer(bootstrap_servers='kafka-server:9092')
 
 # 상이한 이메일 주소 목록을 생성 한다.
 member_emails = [f"user{i}@example.com" for i in range(1, 1000001)]

@@ -1,14 +1,24 @@
 from datetime import datetime, timedelta
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
+# Airflow 2.0 이상에서 PythonOperator 임포트 방법
+from airflow.operators.python import PythonOperator
+
+# DummyOperator는 빨간줄이 떠서 일단 사용하지 않기로 결정함.
+# 추후 task 그룹화가 필수적이 되면 그때 해결하자.
+
+# from airflow.operators.dummy import DummyOperator
+
 # generate_data.py 모듈에서 함수들을 임포트합니다.
 from sales_data_generator import modify_num_transactions_as_time_and_weekday, generate_transactions
+from sales_data_generator import member_emails, room_types, guest_numbers
+import send_to_kafka
+import aggregate_with_spark
 
 # DAG 정의
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2023, 11, 8),
+    'start_date': datetime(2023, 11, 9),
     'email': ['thphysics@naver.com'],
     'email_on_failure': False,
     'email_on_retry': False,
@@ -17,10 +27,10 @@ default_args = {
 }
 
 dag = DAG(
-    'pension_sales_dashboard',
+    'kafka_data_pipeline',
     default_args=default_args,
-    description='A DAG for scheduling virtual payment data generation based on seasonality and promotions',
-    schedule_interval=timedelta(days=1),  # 매일 실행을 위한 설정
+    description='A simple data pipeline that sends data to Kafka and aggregates with Spark',
+    schedule=timedelta(seconds=1),  # 초단위 스케줄
 )
 
 # 할인 프로모션 여부를 결정하는 함수
@@ -60,7 +70,7 @@ def create_data(**kwargs):
 adjust_transactions_for_event_task = PythonOperator(
     task_id='adjust_transactions_for_event',
     python_callable=adjust_transactions_for_event,
-    provide_context=True,
+    # provide_context=True,
     dag=dag,
 )
 
@@ -68,32 +78,33 @@ adjust_transactions_for_event_task = PythonOperator(
 generate_virtual_payment_data = PythonOperator(
     task_id='generate_virtual_payment_data',
     python_callable=create_data,
-    provide_context=True,
+    # provide_context=True,
     dag=dag,
 )
 
 # 데이터를 Kafka로 보내는 Task (여기서는 send_to_kafka 함수를 정의해야 합니다)
-send_to_kafka = PythonOperator(
+send_to_kafka_task = PythonOperator(
     task_id='send_to_kafka',
-    # python_callable=send_to_kafka,  # 이 함수는 정의되어 있어야 합니다.
-    provide_context=True,
+    python_callable=send_to_kafka,  # 이 함수는 정의 되어 있어야 합니다.
+    # provide_context=True,
     dag=dag,
 )
 
 # Spark를 이용해 데이터 집계하는 Task (여기서는 aggregate_with_spark 함수를 정의해야 합니다)
 aggregate_with_spark = PythonOperator(
     task_id='aggregate_with_spark',
-    # python_callable=aggregate_with_spark,  # 이 함수는 정의되어 있어야 합니다.
+    python_callable=aggregate_with_spark,  # 이 함수는 정의되어 있어야 합니다.
     provide_context=True,
     dag=dag,
 )
 
 # 종료 Task 정의
-end_operator = DummyOperator(task_id='end_execution', dag=dag)
+# end_operator = DummyOperator(task_id='end_execution', dag=dag)
 
 # Task 종속성 설정
 adjust_transactions_for_event_task >> generate_virtual_payment_data
 generate_virtual_payment_data >> send_to_kafka
 send_to_kafka >> aggregate_with_spark
-aggregate_with_spark >> end_operator
+# aggregate_with_spark >> end_operator
+
 
