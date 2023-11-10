@@ -1,4 +1,4 @@
-def aggregate_with_spark(ds, **kwargs):
+def aggregate_with_spark():
 
     from pyspark.sql import SparkSession
     from pyspark.sql.functions import col, from_json, window

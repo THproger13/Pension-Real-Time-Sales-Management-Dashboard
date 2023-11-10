@@ -1,6 +1,4 @@
 from fastapi import FastAPI
-import json
-from kafka import KafkaProducer
 
 app = FastAPI()
 
