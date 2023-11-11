@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, '/mnt/c/data1/(Python)Pension-Real-Time-Sales-Management-Dashboard/')
+
 from datetime import datetime, timedelta
 from airflow import DAG
 # Airflow 2.0 이상에서 PythonOperator 임포트 방법
@@ -8,9 +11,9 @@ from airflow.operators.python import PythonOperator
 
 # from airflow.operators.dummy import DummyOperator
 
-# generate_data.py 모듈에서 함수들을 임포트합니다.
 from sales_data_generator import modify_num_transactions_as_time_and_weekday, generate_transactions
 from sales_data_generator import member_emails, room_types, guest_numbers
+
 # from kafka import KafkaProducer
 # from kafka.producer import KafkaProducer
 
@@ -26,14 +29,14 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 0,
-    'retry_delay': timedelta(seconds=5),
+    'retry_delay': timedelta(seconds=1.5),
 }
 
 dag = DAG(
     'kafka_data_pipeline',
     default_args=default_args,
     description='A simple data pipeline that sends data to Kafka and aggregates with Spark',
-    schedule=timedelta(days=1),  # 초단위 스케줄
+    schedule=timedelta(days=1),  # 일단위 스케줄
 )
 
 # 할인 프로모션 여부를 결정하는 함수

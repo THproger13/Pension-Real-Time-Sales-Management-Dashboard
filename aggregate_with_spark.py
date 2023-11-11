@@ -50,6 +50,6 @@ def aggregate_with_spark():
     query_daily = sales_daily.writeStream.foreachBatch(write_to_mysql).outputMode("update").start()
     query_weekly = sales_weekly.writeStream.foreachBatch(write_to_mysql).outputMode("update").start()
     query_monthly = sales_monthly.writeStream.foreachBatch(write_to_mysql).outputMode("update").start()
-
+    print("query_daily" + query_daily, "query_weekly" + query_weekly,"query_monthly" + query_monthly)
     # 작업이 바로 반환되어 Airflow로 제어가 돌아오도록 합니다.
     return {"query_daily_id": query_daily.id, "query_weekly_id": query_weekly.id, "query_monthly_id": query_monthly.id}
