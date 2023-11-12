@@ -24,29 +24,27 @@ def modify_num_transactions_as_time_and_weekday():
     current_hour = datetime.now().hour
     current_weekday = datetime.now().weekday()
 
-    # 평일과 주말에 따라, 특정 시간 대에 따라 num_transactions 수를 조절.
+    # 기본값으로 일단 100을 설정합니다.
+    num_transactions = 100
+
+    # 평일 오전 9시부터 오후 6시 사이
     if 0 <= current_weekday <= 4:
         if 9 <= current_hour <= 18:
-            random_num_transactions = random.choice(range(100, 300))
-            num_transactions = random_num_transactions
-            return num_transactions
+            num_transactions = random.choice(range(100, 300))
         else:
-            random_num_transactions = random.choice(range(200, 600))
-            num_transactions = random_num_transactions
-            return num_transactions
+            num_transactions = random.choice(range(200, 600))
+
+    # 주말
     else:
         if 9 <= current_hour <= 12:
-            random_num_transactions = random.choice(range(10, 200))
-            num_transactions = random_num_transactions
-            return num_transactions
-        elif 12 <= current_hour <= 20:
-            random_num_transactions = random.choice(range(150, 700))
-            num_transactions = random_num_transactions
-            return num_transactions
+            num_transactions = random.choice(range(10, 200))
+        elif 12 < current_hour <= 20:
+            num_transactions = random.choice(range(150, 700))
         else:
-            random_num_transactions = random.choice(range(0, 100))
-            num_transactions = random_num_transactions
-            return num_transactions
+            num_transactions = random.choice(range(0, 100))
+
+    # num_transactions 반환
+    return num_transactions
 
 
 def generate_transactions(num_transactions, member_emails, room_types, guest_numbers):
@@ -70,6 +68,7 @@ def generate_transactions(num_transactions, member_emails, room_types, guest_num
         transactions.append(transaction)
 
     return transactions
+
 
 # generate_transactions를 호출하기 전에 num_transactions 값을 설정.
 num_transactions = modify_num_transactions_as_time_and_weekday()
