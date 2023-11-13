@@ -17,4 +17,4 @@ def send_to_kafka(transactions):
         producer.send('pension-sales', json.dumps(transaction).encode('utf-8'))
     # 모든 메시지가 전송될 때까지 기다림
     producer.flush()
-    print("kafka transaction" + str(transactions))
+    print(f"Sent transactions to Kafka: {transactions}")
