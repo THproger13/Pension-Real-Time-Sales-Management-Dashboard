@@ -56,7 +56,7 @@ def adjust_transactions_for_event(**kwargs):
         num_transactions *= 1.5  # 성수기에는 50% 증가
 
     # 비성수기 조건
-    elif today.month in [4, 5, 9, 10, 11, 12]:
+    elif today.month in [1, 2, 3, 4, 5, 9, 10, 11, 12]:
         num_transactions *= 0.7  # 비성수기에는 30% 감소
 
     # 할인 프로모션 조건
