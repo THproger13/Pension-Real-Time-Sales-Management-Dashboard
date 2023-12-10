@@ -13,7 +13,7 @@ def aggregate_with_spark():
     # Kafka 소스에서 스트리밍 데이터프레임을 생성합니다.
     df = spark.readStream \
             .format("kafka") \
-            .option("kafka.bootstrap.servers", "9092") \
+            .option("kafka.bootstrap.servers", "kafka:9092") \
             .option("subscribe", "pension-sales") \
             .option("startingOffsets", "earliest") \
             .load()
@@ -43,10 +43,10 @@ def aggregate_with_spark():
         def to_db(df, epoch_id):
             df.write \
                 .format("jdbc") \
-                .option("url", "jdbc:mysql://localhost/db_reservation") \
+                .option("url", "jdbc:mysql://127.0.0.1:3306/db_reservation") \
                 .option("dbtable", table_name) \
-                .option("user", "root") \
-                .option("password", "password") \
+                .option("user", "user_reservation") \
+                .option("password", "1234") \
                 .option("driver", "com.mysql.cj.jdbc.Driver") \
                 .mode("append") \
                 .save()
