@@ -12,11 +12,12 @@ def aggregate_with_spark():
 
     # Kafka 소스에서 스트리밍 데이터프레임을 생성합니다.
     df = spark.readStream \
-        .format("kafka") \
-        .option("kafka.bootstrap.servers", "172.28.31.155:9092") \
-        .option("subscribe", "pension-sales") \
-        .option("startingOffsets", "earliest") \
-        .load()
+            .format("kafka") \
+            .option("kafka.bootstrap.servers", "9092") \
+            .option("subscribe", "pension-sales") \
+            .option("startingOffsets", "earliest") \
+            .load()
+    # .option("kafka.bootstrap.servers", "172.28.31.155:9092") \
 
     # 정의된 스키마에 따라 JSON 문자열을 파싱합니다.
     schema = StructType([

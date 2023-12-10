@@ -22,7 +22,7 @@ from aggregate_with_spark import aggregate_with_spark
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2023, 11, 12),
+    'start_date': datetime(2023, 11, 20),
     'email': ['thphysics@naver.com'],
     'email_on_failure': False,
     'email_on_retry': False,

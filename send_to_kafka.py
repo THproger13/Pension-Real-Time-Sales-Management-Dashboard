@@ -10,7 +10,8 @@ import json
 
 def send_to_kafka(transactions):
     # KafkaProducer 인스턴스 생성
-    producer = KafkaProducer(bootstrap_servers='172.28.31.155:9092')
+    # producer = KafkaProducer(bootstrap_servers='172.28.31.155:9092')
+    producer = KafkaProducer(bootstrap_servers='9092')
 
     # 생성된 각 트랜잭션을 Kafka로 전송
     for transaction in transactions:
