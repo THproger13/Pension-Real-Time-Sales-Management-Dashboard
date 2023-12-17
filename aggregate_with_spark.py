@@ -3,17 +3,29 @@ def aggregate_with_spark():
     from pyspark.sql import SparkSession
     from pyspark.sql.functions import col, from_json, window
     from pyspark.sql.types import StringType, StructType, StructField, IntegerType, TimestampType
+    import os
+
+    # 실행 환경에 따라 JDBC 드라이버 경로를 설정합니다.
+    jdbc_driver_path = "C:/Users/thphy/mysql-connector-j-8.2.0/mysql-connector-java-8.2.0.jar"
+    if os.path.exists(jdbc_driver_path):
+        # Windows 환경에서는 주어진 경로를 사용합니다.
+        spark_jars = jdbc_driver_path
+    else:
+        # 비Windows 환경에서는 Maven 저장소에서 자동으로 드라이버를 다운로드하도록 설정합니다.
+        spark_jars = "org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1,mysql:mysql-connector-java:8.0.26"
 
     spark = SparkSession.builder \
         .appName("sales-analytics") \
-        .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1") \
-        .config("spark.jars", "/path/to/mysql-connector-java.jar") \
+        .config("spark.jars.packages", spark_jars) \
         .getOrCreate()
+
+    # .config("spark.jars", "C:/Users/thphy/mysql-connector-j-8.2.0/mysql-connector-java-8.2.0.jar") \
+    # .config("spark.jars", "/path/to/mysql-connector-java.jar") \
 
     # Kafka 소스에서 스트리밍 데이터프레임을 생성합니다.
     df = spark.readStream \
             .format("kafka") \
-            .option("kafka.bootstrap.servers", "kafka:9092") \
+            .option("kafka.bootstrap.servers", "172.28.31.155:9092") \
             .option("subscribe", "pension-sales") \
             .option("startingOffsets", "earliest") \
             .load()

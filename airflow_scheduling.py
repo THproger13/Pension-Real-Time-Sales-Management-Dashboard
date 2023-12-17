@@ -34,7 +34,7 @@ dag = DAG(
     'kafka_data_pipeline',
     default_args=default_args,
     description='A simple data pipeline that sends data to Kafka and aggregates with Spark',
-    schedule=timedelta(days=1),  # 일단위 스케줄
+    schedule=timedelta(minutes=1),  # 분단위 스케줄
 )
 
 
