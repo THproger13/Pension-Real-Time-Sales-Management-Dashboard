@@ -2,6 +2,7 @@ def aggregate_with_spark():
 
     from pyspark.sql import SparkSession
     from pyspark.sql.functions import col, from_json, window
+    from pyspark.sql.functions import sum as sum_
     from pyspark.sql.types import StringType, StructType, StructField, IntegerType, TimestampType
     import os
 
@@ -45,10 +46,31 @@ def aggregate_with_spark():
     # watermark를 추가합니다.
     sales_df_with_watermark = sales_df.withWatermark("timestamp", "1 minutes")  # 1분의 지연을 허용
 
-    # 다양한 시간대 기반 윈도우를 사용하여 데이터 집계
-    sales_hourly = sales_df_with_watermark.groupBy(window(col("timestamp"), "1 hour"), col("roomType")).sum("roomPrice")
-    sales_daily = sales_df_with_watermark.groupBy(window(col("timestamp"), "1 day"), col("roomType")).sum("roomPrice")
-    sales_weekly = sales_df_with_watermark.groupBy(window(col("timestamp"), "1 week"), col("roomType")).sum("roomPrice")
+        # 다양한 시간대 기반 윈도우를 사용하여 데이터 집계
+    sales_hourly = (sales_df_with_watermark
+                    .groupBy(window(col("timestamp"), "1 hour"), col("roomType"))
+                    .agg(sum_("roomPrice").alias("total_sales"))
+                    .select(col("window.start").alias("window_start"),
+                            col("window.end").alias("window_end"),
+                            col("roomType"),
+                            col("total_sales")))
+    # Adjusted sales_daily DataFrame
+    sales_daily = (sales_df_with_watermark
+                   .groupBy(window(col("timestamp"), "1 day"), col("roomType"))
+                   .agg(sum_("roomPrice").alias("total_sales"))
+                   .select(col("window.start").alias("window_start"),
+                           col("window.end").alias("window_end"),
+                           col("roomType"),
+                           col("total_sales")))
+
+    # Adjusted sales_weekly DataFrame
+    sales_weekly = (sales_df_with_watermark
+                    .groupBy(window(col("timestamp"), "1 week"), col("roomType"))
+                    .agg(sum_("roomPrice").alias("total_sales"))
+                    .select(col("window.start").alias("window_start"),
+                            col("window.end").alias("window_end"),
+                            col("roomType"),
+                            col("total_sales")))
 
     # MySQL 데이터베이스에 저장하는 쿼리를 정의합니다.
     def write_to_mysql(table_name):
