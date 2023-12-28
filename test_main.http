@@ -11,3 +11,20 @@ Accept: application/json
 ###
 GET http://127.0.0.1:8000/generate-transactions/
 Accept: application/pdf
+
+###
+POST http://localhost:8000/test/generate_transactions
+Accept: application/json
+
+{
+  "num_transactions": 10
+}
+
+### Send to Kafka Test
+POST http://127.0.0.1:8000/test/send_to_kafka
+Content-Type: application/json
+
+
+  {
+    transaction data
+  }
