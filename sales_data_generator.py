@@ -2,8 +2,6 @@ from datetime import datetime, timedelta
 import random
 import json
 
-# producer = KafkaProducer(bootstrap_servers='kafka-server:9092')
-
 # 상이한 이메일 주소 목록을 생성 한다.
 member_emails = [f"user{i}@example.com" for i in range(1, 1000001)]
 
@@ -24,10 +22,10 @@ def modify_num_transactions_as_time_and_weekday():
     current_hour = datetime.now().hour
     current_weekday = datetime.now().weekday()
 
-    # 기본값으로 일단 100을 설정합니다.
+    # 기본값으로 일단 100을 설정.
     num_transactions = 100
 
-    # 평일 오전 9시부터 오후 6시 사이
+    # 평일 오전 9시부터 오후 6시 사이, 나머지 시간에 대해 결제 데이터 생성량을 다르게 한다.
     if 0 <= current_weekday <= 4:
         if 9 <= current_hour <= 18:
             num_transactions = random.choice(range(100, 300))

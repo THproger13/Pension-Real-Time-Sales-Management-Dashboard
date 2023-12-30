@@ -8,23 +8,26 @@ Accept: application/json
 GET http://127.0.0.1:8000/hello/User
 Accept: application/json
 
-###
-GET http://127.0.0.1:8000/generate-transactions/
-Accept: application/pdf
 
-###
+### modify_num_transactions_as_time_and_weekday(),
+### generate_transactions(num_transactions, member_emails, room_types, guest_numbers)  함수 테스트
 POST http://localhost:8000/test/generate_transactions
 Accept: application/json
 
-{
-  "num_transactions": 10
-}
-
 ### Send to Kafka Test
-POST http://127.0.0.1:8000/test/send_to_kafka
-Content-Type: application/json
+POST http://localhost:8000/test/send_to_kafka
+Accept: application/json
+#Content-Type: application/json
+
+### aggregate_with_spark
+POST http://localhost:8000/test/aggregate_with_spark
+Accept: application/json
 
 
-  {
-    transaction data
-  }
+
+//Content-Type: application/json
+
+#
+#  {
+#    transaction data
+#  }

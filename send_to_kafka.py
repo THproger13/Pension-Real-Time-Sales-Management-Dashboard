@@ -1,12 +1,15 @@
 # from fastapi import FastAPI
+import logging
+
 from kafka.producer import KafkaProducer
 import json
-
 
 # from sales_data_generator import modify_num_transactions_as_time_and_weekday, generate_transactions
 # from sales_data_generator import member_emails, room_types, guest_numbers
 
 # app = FastAPI()
+logging.basicConfig(level=logging.INFO)
+
 
 def send_to_kafka(transactions):
     # KafkaProducer 인스턴스 생성
@@ -16,6 +19,14 @@ def send_to_kafka(transactions):
     # 생성된 각 트랜잭션을 Kafka로 전송
     for transaction in transactions:
         producer.send('pension-sales', json.dumps(transaction).encode('utf-8'))
+        # result = future.get(timeout=3)
+
+        # 결과를 로깅
+        # if result:
+        #     logging.info(f"Transaction sent to Kafka: {transaction}")
+        # else:
+        #     logging.error("Failed to send transaction to Kafka")
+
     # 모든 메시지가 전송될 때까지 기다림
     producer.flush()
-    print(f"Sent transactions to Kafka: {transactions}")
+    # print(f"Sent transactions to Kafka: {transactions}")
