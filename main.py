@@ -40,17 +40,32 @@ def test_generate_transactions():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# @app.post("/test/send_to_kafka")
+# def test_send_to_kafka():
+#     try:
+#         adjusted_num_transactions = modify_num_transactions_as_time_and_weekday()
+#         transactions = generate_transactions(adjusted_num_transactions, member_emails, room_types, guest_numbers)
+#         kafkaresult = send_to_kafka(transactions)
+#         if kafkaresult:
+#             return {"Sent transactions to Kafka": transactions}
+#         else:
+#             return {"kafka error": "뿌엥 ㅜㅜㅜ"}
+#         # return send_to_kafka(transactions)
+#
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/test/send_to_kafka")
 def test_send_to_kafka():
     try:
         adjusted_num_transactions = modify_num_transactions_as_time_and_weekday()
         transactions = generate_transactions(adjusted_num_transactions, member_emails, room_types, guest_numbers)
-        kafkaresult = send_to_kafka(transactions)
-        if kafkaresult:
-            return {"Sent transactions to Kafka": transactions}
+        kafka_result = send_to_kafka(transactions)
+
+        if kafka_result["failure"] == 0:
+            return {"message": "All transactions sent to Kafka successfully", "details": kafka_result}
         else:
-            return {"kafka error": "뿌엥 ㅜㅜㅜ"}
-        # return send_to_kafka(transactions)
+            return {"message": "Some transactions failed to send", "details": kafka_result}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
