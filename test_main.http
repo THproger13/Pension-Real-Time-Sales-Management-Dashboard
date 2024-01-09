@@ -25,7 +25,9 @@ Accept: application/json
 POST http://localhost:8000/test/aggregate_with_spark
 Accept: application/json
 
-
+### set_mysql_jdbc
+POST http://localhost:8000/test/set_mysql_jdbc
+Accept: application/json
 
 //Content-Type: application/json
 

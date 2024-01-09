@@ -3,7 +3,9 @@ from kafka.producer import KafkaProducer
 import json
 from sales_data_generator import generate_transactions, member_emails, room_types, guest_numbers, \
     modify_num_transactions_as_time_and_weekday
-from aggregate_with_spark import aggregate_with_spark
+# from aggregate_with_spark import aggregate_with_spark, set_mysql_jdbc
+from aggregate_with_spark import set_mysql_jdbc
+
 from send_to_kafka import send_to_kafka
 
 app = FastAPI()
@@ -71,13 +73,21 @@ def test_send_to_kafka():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/test/aggregate_with_spark")
-def test_aggregate_with_spark():
+# @app.post("/test/aggregate_with_spark")
+# def test_aggregate_with_spark():
+#     try:
+#         # adjusted_num_transactions = modify_num_transactions_as_time_and_weekday()
+#         # transactions = generate_transactions(adjusted_num_transactions, member_emails, room_types, guest_numbers)
+#         # send_to_kafka(transactions)
+#         result = aggregate_with_spark()
+#         return {"result": result}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/test/set_mysql_jdbc")
+def test_set_mysql_jdbc():
     try:
-        adjusted_num_transactions = modify_num_transactions_as_time_and_weekday()
-        transactions = generate_transactions(adjusted_num_transactions, member_emails, room_types, guest_numbers)
-        send_to_kafka(transactions)
-        result = aggregate_with_spark()
+        result = set_mysql_jdbc()
         return {"result": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
