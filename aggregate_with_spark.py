@@ -79,7 +79,7 @@ def aggregate_with_spark():
                             col("roomType"),
                             col("total_sales")))
     #
-    # # MySQL 데이터베이스에 저장하는 쿼리를 정의합니다.
+    # # MySQL 데이터베이스에 저장하는 쿼리를 정의.
     def write_to_mysql(table_name):
         def to_db(df, epoch_id):
             df.write \
@@ -93,7 +93,7 @@ def aggregate_with_spark():
                 .save()
 
         return to_db
-    #
+
     # # 각 윈도우 기반 집계에 대해 쓰기 작업을 설정합니다.
     query_hourly = sales_hourly.writeStream.foreachBatch(write_to_mysql("sales_hourly")).outputMode("append").start()
     query_daily = sales_daily.writeStream.foreachBatch(write_to_mysql("sales_daily")).outputMode("append").start()

@@ -1,9 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import random
-import json
+from send_to_kafka import send_to_kafka
+# import json
 
 # 상이한 이메일 주소 목록을 생성 한다.
-member_emails = [f"user{i}@example.com" for i in range(1, 1000001)]
+member_emails = [f"user{i}@example.com" for i in range(1, 100000001)]
 
 # 방 종류와 가격을 정의 한다.
 room_types = {
@@ -17,10 +18,19 @@ room_types = {
 guest_numbers = [2, 3, 4, 5]
 
 
+def is_discount_promotion():
+    current_date = datetime.now()
+    # 할인 프로모션 날짜 범위 설정
+    promo_start = datetime(2023, 11, 15)
+    promo_end = datetime(2023, 11, 30)
+    return promo_start <= current_date <= promo_end
+
+
 # 요일과 시간에 따라 num_transactions 수를 조절 한다.
 def modify_num_transactions_as_time_and_weekday():
     current_hour = datetime.now().hour
     current_weekday = datetime.now().weekday()
+    current_month = datetime.now().month
 
     # 기본값으로 일단 100을 설정.
     num_transactions = 100
@@ -28,26 +38,39 @@ def modify_num_transactions_as_time_and_weekday():
     # 평일 오전 9시부터 오후 6시 사이, 나머지 시간에 대해 결제 데이터 생성량을 다르게 한다.
     if 0 <= current_weekday <= 4:
         if 9 <= current_hour <= 18:
-            num_transactions = random.choice(range(100, 300))
+            num_transactions = random.choice(range(1000, 3000))
         else:
-            num_transactions = random.choice(range(200, 600))
+            num_transactions = random.choice(range(2000, 6000))
 
     # 주말
     else:
         if 9 <= current_hour <= 12:
-            num_transactions = random.choice(range(10, 200))
+            num_transactions = random.choice(range(100, 2000))
         elif 12 < current_hour <= 20:
-            num_transactions = random.choice(range(150, 700))
+            num_transactions = random.choice(range(1500, 7000))
         else:
-            num_transactions = random.choice(range(0, 100))
+            num_transactions = random.choice(range(0, 1000))
+
+    # 성수기 조건
+    if current_month in [6, 7, 8]:
+        num_transactions *= 1.5  # 성수기에는 50% 증가
+
+    # 비성수기 조건
+    elif current_month in [1, 2, 3, 4, 5, 9, 10, 11, 12]:
+        num_transactions *= 0.7  # 비성수기에는 30% 감소
+
+    # 할인 프로모션 조건
+    if is_discount_promotion():
+        num_transactions *= 1.2  # 할인 프로모션에는 20% 증가
 
     # num_transactions 반환
     return num_transactions
 
 
 def generate_transactions(num_transactions, member_emails, room_types, guest_numbers):
+    rounded_num_transaction = round(num_transactions)
     transactions = []
-    for _ in range(num_transactions):
+    for _ in range(rounded_num_transaction):
         # 임의의 멤버 이메일을 선택.
         member_email = random.choice(member_emails)
         # 임의의 방 종류를 선택하고, 해당 가격을 가져옴.
@@ -69,7 +92,12 @@ def generate_transactions(num_transactions, member_emails, room_types, guest_num
 
 
 # generate_transactions를 호출하기 전에 num_transactions 값을 설정.
-num_transactions = modify_num_transactions_as_time_and_weekday()
-example_transactions = generate_transactions(num_transactions, member_emails, room_types, guest_numbers)
-for transaction in example_transactions:
-    print(transaction)
+while True:
+    num_transactions = modify_num_transactions_as_time_and_weekday()
+    example_transactions = generate_transactions(num_transactions, member_emails, room_types, guest_numbers)
+    send_to_kafka(example_transactions)
+    time.sleep(1)  # 1분 간격
+
+# for transaction in example_transactions:
+        # print(transaction)
+

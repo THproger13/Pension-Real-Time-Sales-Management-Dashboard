@@ -4,7 +4,7 @@ import json
 from sales_data_generator import generate_transactions, member_emails, room_types, guest_numbers, \
     modify_num_transactions_as_time_and_weekday
 # from aggregate_with_spark import aggregate_with_spark, set_mysql_jdbc
-from aggregate_with_spark import set_mysql_jdbc
+# from aggregate_with_spark import set_mysql_jdbc
 
 from send_to_kafka import send_to_kafka
 
