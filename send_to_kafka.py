@@ -89,12 +89,15 @@ def on_send_error(excp):
     logging.error('Message send failed', exc_info=excp)
 
 def send_to_kafka(transactions):
-    producer = KafkaProducer(bootstrap_servers='172.28.31.155:9092', value_serializer=lambda x: json.dumps(x).encode('utf-8'))
+    producer = KafkaProducer(bootstrap_servers='172.28.31.155:9092',
+                             value_serializer=lambda x: json.dumps(x).encode('utf-8'),
+                             api_version=(0,11,5)
+    )
 
     for transaction in transactions:
         producer.send('pension-sales', transaction).add_callback(on_send_success).add_errback(on_send_error)
 
     producer.flush()
 
-    return {"total": len(transactions), "success": KafkaResult.success_count, "failure": KafkaResult.failure_count}
+    print("total:", len(transactions), "success:", KafkaResult.success_count, "failure:", KafkaResult.failure_count)
 

@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta, time
+import time
+from datetime import datetime, timedelta
 import random
 from send_to_kafka import send_to_kafka
 # import json
@@ -45,7 +46,7 @@ def modify_num_transactions_as_time_and_weekday():
     # 주말
     else:
         if 9 <= current_hour <= 12:
-            num_transactions = random.choice(range(100, 2000))
+            num_transactions = random.choice(range(1000, 2000))
         elif 12 < current_hour <= 20:
             num_transactions = random.choice(range(1500, 7000))
         else:
@@ -92,11 +93,11 @@ def generate_transactions(num_transactions, member_emails, room_types, guest_num
 
 
 # generate_transactions를 호출하기 전에 num_transactions 값을 설정.
-while True:
-    num_transactions = modify_num_transactions_as_time_and_weekday()
-    example_transactions = generate_transactions(num_transactions, member_emails, room_types, guest_numbers)
-    send_to_kafka(example_transactions)
-    time.sleep(1)  # 1분 간격
+# while True:
+num_transactions = modify_num_transactions_as_time_and_weekday()
+example_transactions = generate_transactions(num_transactions, member_emails, room_types, guest_numbers)
+send_to_kafka(example_transactions)
+time.sleep(5)  # 1분 간격
 
 # for transaction in example_transactions:
         # print(transaction)
