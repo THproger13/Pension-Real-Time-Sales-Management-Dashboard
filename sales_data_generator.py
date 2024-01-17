@@ -1,7 +1,8 @@
 import time
 from datetime import datetime, timedelta
 import random
-from send_to_kafka import send_to_kafka
+from send_to_kafka import divide_transactions, run_producer_threads
+from aggregate_with_spark import aggregate_with_spark
 # import json
 
 # 상이한 이메일 주소 목록을 생성 한다.
@@ -17,7 +18,6 @@ room_types = {
 
 # 숙박 인원수 옵션을 정의 한다.
 guest_numbers = [2, 3, 4, 5]
-
 
 def is_discount_promotion():
     current_date = datetime.now()
@@ -95,9 +95,12 @@ def generate_transactions(num_transactions, member_emails, room_types, guest_num
 # generate_transactions를 호출하기 전에 num_transactions 값을 설정.
 # while True:
 num_transactions = modify_num_transactions_as_time_and_weekday()
-example_transactions = generate_transactions(num_transactions, member_emails, room_types, guest_numbers)
-send_to_kafka(example_transactions)
-time.sleep(5)  # 1분 간격
+total_transactions = generate_transactions(num_transactions, member_emails, room_types, guest_numbers)
+num_threads = 10 # 스레드 수
+transactions_per_thread = divide_transactions(total_transactions, num_threads)  # 각 스레드에 할당될 트랜잭션 목록
+run_producer_threads(num_threads, transactions_per_thread)
+aggregate_with_spark()
+time.sleep(3)  # 1초 간격
 
 # for transaction in example_transactions:
         # print(transaction)
