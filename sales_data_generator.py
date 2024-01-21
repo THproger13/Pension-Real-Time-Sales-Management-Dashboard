@@ -1,3 +1,4 @@
+import logging
 import time
 from datetime import datetime, timedelta
 import random
@@ -93,15 +94,23 @@ def generate_transactions(num_transactions, member_emails, room_types, guest_num
 
 
 # generate_transactions를 호출하기 전에 num_transactions 값을 설정.
-# while True:
-num_transactions = modify_num_transactions_as_time_and_weekday()
-total_transactions = generate_transactions(num_transactions, member_emails, room_types, guest_numbers)
-num_threads = 10 # 스레드 수
-transactions_per_thread = divide_transactions(total_transactions, num_threads)  # 각 스레드에 할당될 트랜잭션 목록
-run_producer_threads(num_threads, transactions_per_thread)
-aggregate_with_spark()
-time.sleep(3)  # 1초 간격
+while True:
+    num_transactions = modify_num_transactions_as_time_and_weekday()
+    print("num_transactions : ", num_transactions)
+    total_transactions = generate_transactions(num_transactions, member_emails, room_types, guest_numbers)
+    num_threads = 10 # 스레드 수
+    transactions_per_thread = divide_transactions(total_transactions, num_threads)  # 각 스레드에 할당될 트랜잭션 목록
+    start_time = time.time()  # 루프 시작 시간 기록
+    run_producer_threads(num_threads, transactions_per_thread)
 
-# for transaction in example_transactions:
-        # print(transaction)
+    # 메시지 전송에 걸린 시간을 계산합니다.
+    elapsed_time = time.time() - start_time
+    print(f"Elapsed time for sending messages: {elapsed_time:.2f} seconds")
+
+    # 메시지 전송 시간이 1초보다 적게 걸렸다면, 나머지 시간만큼 대기합니다.
+    if elapsed_time < 1.0:
+        time.sleep(1 - elapsed_time)
+
+    # for transaction in example_transactions:
+            # print(transaction)
 

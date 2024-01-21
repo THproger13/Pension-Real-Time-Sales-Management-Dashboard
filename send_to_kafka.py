@@ -1,6 +1,7 @@
 # from fastapi import FastAPI
 import logging
 import threading
+import time
 
 from kafka.producer import KafkaProducer
 import json
@@ -76,11 +77,9 @@ import json
 
 logging.basicConfig(level=logging.INFO)
 
-
 class KafkaResult:
     success_count = 0
     failure_count = 0
-
 
 def on_send_success(record_metadata):
     KafkaResult.success_count += 1
@@ -93,35 +92,48 @@ def on_send_error(excp):
     logging.error('Message send failed', exc_info=excp)
 
 
+producer = KafkaProducer(bootstrap_servers='172.28.31.155:9092',
+                         value_serializer=lambda x: json.dumps(x).encode('utf-8'),
+                         api_version=(0, 11, 5),
+
+                         # 성능 향상을 위한 설정
+                         batch_size=128 * 1024,  # 32KB; 배치 크기 조절
+                         linger_ms=5,  # 10ms; 린지 모드
+                         buffer_memory=128 * 1024 * 1024,  # 64MB; 버퍼 메모리 조정
+                         compression_type='gzip',  # 메시지 압축 사용
+
+                         # reconnect_backoff_ms=500,  # 재연결 시도 간의 대기 시간 (밀리초)
+                         # reconnect_backoff_max_ms=1000,  # 최대 재연결 대기 시간 (밀리초)
+                         # connections_max_idle_ms=10 * 60 * 1000  # 연결 유휴 시간 (10분으로 설정)
+                         # acks='1'
+                         )
 def send_to_kafka(transactions):
-    producer = KafkaProducer(bootstrap_servers='172.28.31.155:9092',
-                             value_serializer=lambda x: json.dumps(x).encode('utf-8'),
-                             api_version=(0, 11, 5),
-
-                             # 성능 향상을 위한 설정
-                             batch_size=32 * 1024,  # 32KB; 배치 크기 조절
-                             linger_ms=10,  # 10ms; 린지 모드
-                             buffer_memory=64 * 1024 * 1024,  # 64MB; 버퍼 메모리 조정
-                             compression_type='gzip',  # 메시지 압축 사용
-                             # acks='1'
-                             )
-
-    for transaction in transactions:
-        producer.send('pension-sales', transaction).add_callback(on_send_success).add_errback(on_send_error)
-
-    producer.flush
-
+    global producer
+    try:
+        for transaction in transactions:
+            producer.send('pension-sales', transaction).add_callback(on_send_success).add_errback(on_send_error)
+        producer.flush()
+    except Exception as e:
+        logging.error('Exception in send_to_kafka', exc_info=e)
 
 def run_producer_threads(thread_count, transactions_per_thread):
+    start_time = time.time()
+
     threads = []
-    for _ in range(thread_count):
-        thread_transactions = transactions_per_thread.copy()
-        thread = threading.Thread(target=send_to_kafka, args=(thread_transactions, ))
+    for i in range(thread_count):
+        # thread_transactions = transactions_per_thread
+        thread = threading.Thread(target=send_to_kafka, args=(transactions_per_thread[i], ))
         threads.append(thread)
         thread.start()
 
     for thread in threads:
         thread.join()
+
+    # producer.close()  # 모든 스레드가 종료된 후에 프로듀서 인스턴스를 닫습니다.
+
+    end_time = time.time()  # 메시지 전송 완료 시간 기록
+    total_time = end_time - start_time  # 전체 소요 시간 계산
+    print(f"Total time to send messages: {total_time} seconds")
 
 
 def divide_transactions(total_transactions, num_threads):
@@ -130,7 +142,7 @@ def divide_transactions(total_transactions, num_threads):
     per_thread = len(total_transactions) // num_threads
     return [total_transactions[i * per_thread:(i + 1) * per_thread] for i in range(num_threads)]
 
-# def divide_transactions(total_transactions, num_threads):
+
 #     per_thread = len(total_transactions) // num_threads
 #     remainder = len(total_transactions) % num_threads
 #     transactions_per_thread = [total_transactions[i * per_thread:(i + 1) * per_thread] for i in range(num_threads)]
@@ -138,6 +150,9 @@ def divide_transactions(total_transactions, num_threads):
 #     # 나머지 트랜잭션들을 마지막 스레드에 추가
 #     if remainder:
 #         transactions_per_thread[-1].extend(total_transactions[-remainder:])
+# def divide_transactions(total_transactions, num_threads):
+
+
 #
 #     return transactions_per_thread
 
